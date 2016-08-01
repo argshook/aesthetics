@@ -7,7 +7,32 @@
     body {
       margin: 0;
       padding: 0;
-      background: #111;
+      background-position: 0 600px;
+      background-size: 100% 50%;
+      background-image: radial-gradient(red, blue, green, red);
+      animation: 6s ease 0s infinite backgroundDisco;
+    }
+
+    @keyframes backgroundDisco {
+      0% {
+        background-position: 0 0;
+      }
+      25% {
+        background-position: 10% 50%;
+        background-size: 20% 500%;
+      }
+      50% {
+        background-position: 0 50%;
+        background-size: 200% 50%;
+      }
+      75% {
+        background-image: linear-gradient(red, blue, green, yellow, red);
+      }
+      100% {
+        background-position: 0 100%;
+        background-size: 2% 150%;
+        background-image: radial-gradient(red, blue, green, red);
+      }
     }
   </style>
 </head>

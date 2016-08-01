@@ -6,8 +6,9 @@ const screen = new Screen();
 
 const ctx = canvas.getContext('2d');
 
-//loadImg('assets/mullet.jpg')
-loadImg('assets/mullet.jpg')
+const assets = [ 'mullet.jpg', 'what.png', 'thanks.jpg', 'gif.gif' ];
+
+loadImg(`assets/${assets[rand(assets.length)]}`)
   .then(getImageData)
   .then(imageData =>
     removeAlphaFromImageData(imageData, {
@@ -27,14 +28,7 @@ loadImg('assets/mullet.jpg')
     )
   )
 
-  .then(sprite => {
-    canvas.addEventListener('mousemove', ({ layerX: x, layerY: y }) => {
-      window.requestAnimationFrame(() => {
-        ctx.clearRect(0, 0, screen.w, screen.h);
-        drawClones(sprite, { x, y });
-      });
-    });
-  });
+  .then(render);
 
 function Screen() {
   this.w = window.innerWidth;
@@ -79,7 +73,7 @@ function getImageData(imageNode) {
 }
 
 function removeAlphaFromImageData(imageData, colorKey) {
-  const tolerance = 232;
+  const tolerance = 180;
 
   for (let i = 0, n = imageData.data.length; i < n; i += 4) {
     let diff =
@@ -96,17 +90,14 @@ function removeAlphaFromImageData(imageData, colorKey) {
   return imageData;
 }
 
+const numClones = 10;
 function drawClones(imageData, mousePosition) {
-  return ' '
-    .repeat(5)
-    .split('')
-    .map((v, i) => i)
-    .reverse()
-    .forEach(i => {
-      let { x, y } = getClonePosition(imageData, mousePosition, i);
+  let i = numClones;
 
-      ctx.drawImage(imageData, x, y);
-    });
+  while (i--) {
+    let { x, y } = getClonePosition(imageData, mousePosition, i);
+    ctx.drawImage(imageData, x, y);
+  }
 }
 
 function getClonePosition(imageData, { x: mouseX, y: mouseY }, index) {
@@ -114,16 +105,9 @@ function getClonePosition(imageData, { x: mouseX, y: mouseY }, index) {
   const { x: imageX0, y: imageY0 } = getCenterCoords(imageData.width, imageData.height);
   const { x: mouseX0, y: mouseY0 } = { x: canvasX0 - mouseX, y: canvasY0 - mouseY };
 
-  if (index === 0) {
-    return {
-      x: canvasX0 - imageX0,
-      y: canvasY0 - imageY0
-    };
-  }
-
   return {
-    x: canvasX0 - imageX0 - mouseX0 * index,
-    y: canvasY0 - imageY0 - mouseY0 * index
+    x: (20 * Math.sin(+new Date / 800 * (Math.PI / 2)) + canvasX0 - imageX0 - mouseX0 * index),
+    y: (10 * Math.sin((+new Date + index * 1000) / 100 * (Math.PI / 16)) + canvasY0 - imageY0 - mouseY0 * index)
   };
 }
 
@@ -132,5 +116,20 @@ function getCenterCoords(width, height) {
     x: width / 2,
     y: height / 2
   };
+}
+
+function render(sprite) {
+  let { x, y } = {
+    x: screen.w / 2 - 100,
+    y: (20 * Math.sin(+new Date / 2000 * (Math.PI / 2)) + screen.h / 2)
+  };
+
+  ctx.clearRect(0, 0, screen.w, screen.h);
+  drawClones(sprite, { x, y });
+  window.requestAnimationFrame(() => render(sprite));
+}
+
+function rand(n) {
+  return Math.floor(Math.random() * n);
 }
 
