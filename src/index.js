@@ -1,10 +1,12 @@
 /* globals Promise, createImageBitmap */
+
 const canvas = document.getElementById('canvas');
 
 const screen = new Screen();
 
 const ctx = canvas.getContext('2d');
 
+//loadImg('assets/mullet.jpg')
 loadImg('assets/mullet.jpg')
   .then(getImageData)
   .then(imageData =>
@@ -15,14 +17,22 @@ loadImg('assets/mullet.jpg')
     }
   ))
 
-  .then(keyedImageData => createImageBitmap(keyedImageData, 0, 0, screen.w, screen.h))
+  .then(keyedImageData =>
+    createImageBitmap(
+      keyedImageData,
+      0,
+      0,
+      keyedImageData.width,
+      keyedImageData.height
+    )
+  )
 
   .then(sprite => {
     canvas.addEventListener('mousemove', ({ layerX: x, layerY: y }) => {
       window.requestAnimationFrame(() => {
         ctx.clearRect(0, 0, screen.w, screen.h);
         drawClones(sprite, { x, y });
-      })
+      });
     });
   });
 
@@ -57,14 +67,19 @@ function loadImg(src) {
 function getImageData(imageNode) {
   ctx.drawImage(imageNode, 0, 0);
 
-  const imageData = ctx.getImageData(0, 0, screen.w, screen.h);
+  const imageData = ctx.getImageData(0,
+    0,
+    Math.min(imageNode.width, screen.w),
+    Math.min(imageNode.height, screen.h)
+  );
+
   ctx.clearRect(0, 0, screen.w, screen.h);
 
   return Promise.resolve(imageData);
 }
 
 function removeAlphaFromImageData(imageData, colorKey) {
-  const tolerance = 230;
+  const tolerance = 232;
 
   for (let i = 0, n = imageData.data.length; i < n; i += 4) {
     let diff =
@@ -81,18 +96,41 @@ function removeAlphaFromImageData(imageData, colorKey) {
   return imageData;
 }
 
-function drawClones(imageData, { x, y }) {
-  const sizeToCut = 0;
-
-  ' '
-    .repeat(10)
+function drawClones(imageData, mousePosition) {
+  return ' '
+    .repeat(5)
     .split('')
-    .forEach((_, i, { length }) => {
-      ctx.drawImage(
-        imageData,
-        i < length - 1 ? (x - screen.w / 2) + i * 20 : 0,
-        i < length - 1 ? (y - screen.h / 2) + i * 20 : 0
-      );
+    .map((v, i) => i)
+    .reverse()
+    .forEach(i => {
+      let { x, y } = getClonePosition(imageData, mousePosition, i);
+
+      ctx.drawImage(imageData, x, y);
     });
+}
+
+function getClonePosition(imageData, { x: mouseX, y: mouseY }, index) {
+  const { x: canvasX0, y: canvasY0 } = getCenterCoords(screen.w, screen.h);
+  const { x: imageX0, y: imageY0 } = getCenterCoords(imageData.width, imageData.height);
+  const { x: mouseX0, y: mouseY0 } = { x: canvasX0 - mouseX, y: canvasY0 - mouseY };
+
+  if (index === 0) {
+    return {
+      x: canvasX0 - imageX0,
+      y: canvasY0 - imageY0
+    };
+  }
+
+  return {
+    x: canvasX0 - imageX0 - mouseX0 * index,
+    y: canvasY0 - imageY0 - mouseY0 * index
+  };
+}
+
+function getCenterCoords(width, height) {
+  return {
+    x: width / 2,
+    y: height / 2
+  };
 }
 
