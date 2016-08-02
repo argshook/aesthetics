@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "webpack-dev-server",
-    "buid": "webpack -p",
+    "build": "webpack -p",
     "test": "npm run test"
   },
   "keywords": [

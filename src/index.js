@@ -6,47 +6,48 @@ const screen = new Screen();
 
 const ctx = canvas.getContext('2d');
 
-const assets = [ 'mullet.jpg', 'what.png', 'thanks.jpg', 'gif.gif' ];
+const assets = ['mullet.jpg', 'man.jpg', 'bart.gif', 'philosophy.jpg', 'hipster.jpg'];
 
-loadImg(`assets/${assets[rand(assets.length)]}`)
-  .then(getImageData)
-  .then(imageData =>
-    removeAlphaFromImageData(imageData, {
-      red: imageData.data[0],
-      green: imageData.data[1],
-      blue: imageData.data[2]
-    }
-  ))
+const STATE = {
+  previousTime: +new Date,
+  changeDelay: 5000, // in ms
+  currentImage: '',
+  numClones: 15
+};
 
-  .then(keyedImageData =>
-    createImageBitmap(
-      keyedImageData,
-      0,
-      0,
-      keyedImageData.width,
-      keyedImageData.height
-    )
-  )
+lifecycle();
 
-  .then(render);
+function lifecycle() {
+  return loadImg(getAssetPath())
+    .then(getImageData)
+    .then(prepareImageData)
+    .then(render)
+    .then(lifecycle);
+}
+
+function getAssetPath() {
+  return `assets/${assets[rand(assets.length)]}`;
+}
 
 function Screen() {
   this.w = window.innerWidth;
   this.h = window.innerHeight;
+  this.center = getCenterCoords(this.w, this.h);
 
-  let setCanvasSize = function() {
+  function setCanvasSize() {
     let { innerWidth: w, innerHeight: h } = window;
 
     this.w = w;
     this.h = h;
+    this.center = getCenterCoords(this.w, this.h);
 
     canvas.setAttribute('width', w);
     canvas.setAttribute('height', h);
-  }.bind(this);
+  }
 
-  window.addEventListener('resize', setCanvasSize);
+  window.addEventListener('resize', setCanvasSize.bind(this));
 
-  setCanvasSize();
+  setCanvasSize.call(this);
 }
 
 function loadImg(src) {
@@ -72,8 +73,24 @@ function getImageData(imageNode) {
   return Promise.resolve(imageData);
 }
 
+function prepareImageData(imageData) {
+  const keyedImageData = removeAlphaFromImageData(imageData, {
+    red: imageData.data[0],
+    green: imageData.data[1],
+    blue: imageData.data[2]
+  });
+
+  return createImageBitmap(
+    keyedImageData,
+    0,
+    0,
+    keyedImageData.width,
+    keyedImageData.height
+  );
+}
+
 function removeAlphaFromImageData(imageData, colorKey) {
-  const tolerance = 180;
+  const tolerance = 170;
 
   for (let i = 0, n = imageData.data.length; i < n; i += 4) {
     let diff =
@@ -81,33 +98,28 @@ function removeAlphaFromImageData(imageData, colorKey) {
       Math.abs(imageData.data[i + 1] - colorKey.green) +
       Math.abs(imageData.data[i + 2] - colorKey.blue);
 
-    if (diff < tolerance) {
-      // set alpha channel
-      imageData.data[i + 3] = 0;
-    }
+    imageData.data[i + 3] = (diff * diff) / tolerance;
   }
 
   return imageData;
 }
 
-const numClones = 10;
-function drawClones(imageData, mousePosition) {
-  let i = numClones;
+function drawClones(imageData) {
+  let i = STATE.numClones;
+  const imageCenter = getCenterCoords(imageData.width, imageData.height);
 
   while (i--) {
-    let { x, y } = getClonePosition(imageData, mousePosition, i);
+    let { x, y } = getClonePosition(imageData, imageCenter, i + 1);
     ctx.drawImage(imageData, x, y);
   }
 }
 
-function getClonePosition(imageData, { x: mouseX, y: mouseY }, index) {
-  const { x: canvasX0, y: canvasY0 } = getCenterCoords(screen.w, screen.h);
-  const { x: imageX0, y: imageY0 } = getCenterCoords(imageData.width, imageData.height);
-  const { x: mouseX0, y: mouseY0 } = { x: canvasX0 - mouseX, y: canvasY0 - mouseY };
+function getClonePosition(imageData, { y: imageY0 }, index) {
+  const time = +new Date;
 
   return {
-    x: (20 * Math.sin(+new Date / 800 * (Math.PI / 2)) + canvasX0 - imageX0 - mouseX0 * index),
-    y: (10 * Math.sin((+new Date + index * 1000) / 100 * (Math.PI / 16)) + canvasY0 - imageY0 - mouseY0 * index)
+    x: screen.center.x + imageData.width / 4 - (50 * Math.sin(time / 6000) + (index * 80)),
+    y: screen.center.y - imageY0 - (100 * Math.sin(time / 1000 * (index + 4) * Math.PI / 32)),
   };
 }
 
@@ -119,17 +131,30 @@ function getCenterCoords(width, height) {
 }
 
 function render(sprite) {
-  let { x, y } = {
-    x: screen.w / 2 - 100,
-    y: (20 * Math.sin(+new Date / 2000 * (Math.PI / 2)) + screen.h / 2)
-  };
+  let resolve = null;
 
-  ctx.clearRect(0, 0, screen.w, screen.h);
-  drawClones(sprite, { x, y });
-  window.requestAnimationFrame(() => render(sprite));
+  return new Promise(_resolve_ => {
+    resolve = _resolve_;
+    draw();
+  });
+
+  function draw() {
+    const time = +new Date;
+
+    ctx.clearRect(0, 0, screen.w, screen.h);
+    drawClones(sprite);
+
+    if (time < STATE.previousTime + STATE.changeDelay) {
+      window.requestAnimationFrame(draw);
+    } else {
+      STATE.previousTime = time;
+      resolve();
+    }
+  }
 }
 
 function rand(n) {
   return Math.floor(Math.random() * n);
 }
 
+document.querySelector('audio').volume = 0.4;
