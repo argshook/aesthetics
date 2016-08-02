@@ -131,7 +131,12 @@ function getCenterCoords(width, height) {
 }
 
 function render(sprite) {
-  let resolve = null;
+  let resolve;
+
+  // requestAnimationFrame eats 4x more CPU than
+  // interval drawing every 40ms
+  // not 60 fps but nobody needs that here
+  let intervalId = setInterval(draw, 40);
 
   return new Promise(_resolve_ => {
     resolve = _resolve_;
@@ -144,10 +149,9 @@ function render(sprite) {
     ctx.clearRect(0, 0, screen.w, screen.h);
     drawClones(sprite);
 
-    if (time < STATE.previousTime + STATE.changeDelay) {
-      window.requestAnimationFrame(draw);
-    } else {
+    if (time >= STATE.previousTime + STATE.changeDelay) {
       STATE.previousTime = time;
+      clearInterval(intervalId);
       resolve();
     }
   }
