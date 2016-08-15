@@ -5,8 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "webpack-dev-server",
-    "build": "webpack -p",
-    "test": "npm run test"
+    "build": "webpack -p"
   },
   "keywords": [
     "canvas",
