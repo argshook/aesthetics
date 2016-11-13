@@ -52,10 +52,10 @@ function Screen() {
 
 function loadImg(src) {
   return new Promise((resolve, reject) => {
-    const mulletImg = new Image();
-    mulletImg.src = src;
-    mulletImg.onload = function() { resolve(this); };
-    mulletImg.onerror = reject;
+    const img = new Image();
+    img.src = src;
+    img.onload = function() { resolve(this); };
+    img.onerror = reject;
   });
 }
 
