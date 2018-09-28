@@ -6,13 +6,19 @@ const screen = new Screen();
 
 const ctx = canvas.getContext('2d');
 
-const assets = ['mullet.jpg', 'man.jpg', 'bart.gif', 'philosophy.jpg', 'hipster.jpg'];
+const assets = [
+  'mullet.jpg',
+  'man.jpg',
+  'bart.gif',
+  'philosophy.jpg',
+  'hipster.jpg'
+];
 
 const STATE = {
-  previousTime: +new Date,
+  previousTime: +new Date(),
   changeDelay: 5000, // in ms
   currentImage: '',
-  numClones: 15
+  numClones: 30
 };
 
 lifecycle();
@@ -35,7 +41,7 @@ function Screen() {
   this.center = getCenterCoords(this.w, this.h);
 
   function setCanvasSize() {
-    let { innerWidth: w, innerHeight: h } = window;
+    let {innerWidth: w, innerHeight: h} = window;
 
     this.w = w;
     this.h = h;
@@ -54,7 +60,9 @@ function loadImg(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.src = src;
-    img.onload = function() { resolve(this); };
+    img.onload = function() {
+      resolve(this);
+    };
     img.onerror = reject;
   });
 }
@@ -62,7 +70,8 @@ function loadImg(src) {
 function getImageData(imageNode) {
   ctx.drawImage(imageNode, 0, 0);
 
-  const imageData = ctx.getImageData(0,
+  const imageData = ctx.getImageData(
+    0,
     0,
     Math.min(imageNode.width, screen.w),
     Math.min(imageNode.height, screen.h)
@@ -109,17 +118,23 @@ function drawClones(imageData) {
   const imageCenter = getCenterCoords(imageData.width, imageData.height);
 
   while (i--) {
-    let { x, y } = getClonePosition(imageData, imageCenter, i + 1);
+    let {x, y} = getClonePosition(imageData, imageCenter, i + 1);
     ctx.drawImage(imageData, x, y);
   }
 }
 
-function getClonePosition(imageData, { y: imageY0 }, index) {
-  const time = +new Date;
+function getClonePosition(imageData, {y: imageY0}, index) {
+  const time = +new Date();
 
   return {
-    x: screen.center.x + imageData.width / 4 - (50 * Math.sin(time / 6000) + (index * 80)),
-    y: screen.center.y - imageY0 - (100 * Math.sin(time / 1000 * (index + 4) * Math.PI / 32)),
+    x:
+      screen.center.x +
+      imageData.width / 4 -
+      (100 * Math.sin(time / 6000) + index * 80),
+    y:
+      screen.center.y -
+      imageY0 -
+      100 * Math.sin(((time / 1000) * (index + 4) * Math.PI) / 32)
   };
 }
 
@@ -144,7 +159,7 @@ function render(sprite) {
   });
 
   function draw() {
-    const time = +new Date;
+    const time = +new Date();
 
     ctx.clearRect(0, 0, screen.w, screen.h);
     drawClones(sprite);

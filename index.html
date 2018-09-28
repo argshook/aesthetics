@@ -7,43 +7,40 @@
     body {
       margin: 0;
       padding: 0;
-      background-position: 0 600px;
-      background-size: 100% 50%;
-      background-image: radial-gradient(red, blue, green, red);
-      animation: 6s ease 0s infinite backgroundDisco;
-    }
-
-    @keyframes backgroundDisco {
-      0% {
-        background-position: 0 0;
-      }
-      25% {
-        background-position: 10% 50%;
-        background-size: 20% 500%;
-      }
-      50% {
-        background-position: 0 50%;
-        background-size: 200% 50%;
-      }
-      75% {
-        background-image: linear-gradient(red, blue, green, yellow, red);
-      }
-      100% {
-        background-position: 0 100%;
-        background-size: 2% 150%;
-        background-image: radial-gradient(red, blue, green, red);
-      }
+      overflow: hidden;
     }
 
     audio {
-      display: block;
-      margin: 1em auto;
-      width: 500px;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+
+    .background {
+      height: 200vh;
+      width: 100vw;
+      background-position: 0 600px;
+      background-size: 100% 50%;
+      background-image: radial-gradient(red, blue, green, red);
+      animation: scrollDown 10s linear infinite;
+      position: absolute;
+      top: -100%;
+      left: 0;
+      filter: hue-rotate(0);
+      z-index: -1;
+    }
+
+    @keyframes scrollDown {
+      to {
+        transform: translateY(50%);
+        filter: hue-rotate(360deg);
+      }
     }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
+  <div class="background"></div>
   <audio autoplay loop src="assets/macintosh-bg.mp3" volume="0.5" controls></audio>
   <script src="bundle.min.js"></script>
 </body>
